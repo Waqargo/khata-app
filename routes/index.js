@@ -166,24 +166,26 @@ router.get('/transactions/:id', isLoggedIn, async (req, res) => {
         const category = await Category.findById(categoryId);
         if (!category) return res.status(404).send("Category not found");
 
-        // Build the query object
+        // 1. Fetch ALL categories for the edit modal dropdown (The missing part)
+        const categories = await Category.find({ user: userId });
+
+        // 2. Build the transaction query
         let query = { category: categoryId, user: userId };
         
         if (startDate || endDate) {
             query.date = {};
             if (startDate) query.date.$gte = new Date(startDate);
             if (endDate) {
-                // Set end date to the very end of that day (23:59:59)
                 const end = new Date(endDate);
                 end.setHours(23, 59, 59, 999);
                 query.date.$lte = end;
             }
         }
 
-        // Fetch transactions with the date filter (Sorted: Newest First)
+        // 3. Fetch transactions
         const transactions = await Transaction.find(query).sort({ date: -1 });
 
-        // Calculate Totals (Bank Total and Category Total)
+        // 4. Calculate Totals
         const allStats = await Transaction.aggregate([
             { $match: { user: userId } },
             { $group: { _id: null, total: { $sum: { $cond: [{ $eq: ["$type", "CREDIT"] }, "$amount", { $multiply: ["$amount", -1] }] } } } }
@@ -196,12 +198,14 @@ router.get('/transactions/:id', isLoggedIn, async (req, res) => {
         ]);
         const categoryTotal = catStats.length > 0 ? catStats[0].total : 0;
 
+        // 5. Render with 'categories' included
         res.render('transactions', { 
             category, 
             transactions, 
+            categories, // This fixes the ReferenceError
             categoryTotal, 
             grandTotal,
-            filters: { startDate, endDate } // Pass filters back to the UI to keep inputs filled
+            filters: { startDate, endDate } 
         });
     } catch (err) {
         console.error(err);
@@ -209,15 +213,32 @@ router.get('/transactions/:id', isLoggedIn, async (req, res) => {
     }
 });
 
+// POST: Handle Edit Transaction
 router.post('/transactions/edit/:id', isLoggedIn, async (req, res) => {
     try {
-        const { amount, description, date, type } = req.body;
-        await Transaction.findOneAndUpdate(
-            { _id: req.params.id, user: req.user.id },
-            { amount, description, date, type: type.toUpperCase() }
-        );
-        res.redirect('back'); // Returns user to the same page
-    } catch (err) { res.status(500).send("Update Failed"); }
+        const { amount, date, category, description, type } = req.body;
+        const transactionId = req.params.id;
+
+        // 1. Find the transaction and update it
+        // We include 'category' here so it can be moved to a different group
+        await Transaction.findByIdAndUpdate(transactionId, {
+            amount: parseFloat(amount),
+            date: new Date(date),
+            category: category, 
+            description: description,
+            type: type
+        });
+
+        // 2. Redirect back to the page the user was on
+        // Using 'back' is useful because it returns the user to the specific 
+        // category history page they were viewing.
+        res.redirect('back');
+
+    } catch (err) {
+        console.error("Transaction Update Error:", err);
+        // If it fails, redirect to dashboard as a safety fallback
+        res.redirect('/dashboard');
+    }
 });
 
 router.post('/transactions/delete/:id', isLoggedIn, async (req, res) => {
@@ -298,24 +319,55 @@ router.get('/reports', isLoggedIn, async (req, res) => {
     try {
         const userId = new mongoose.Types.ObjectId(req.user.id);
         
-        // Fetch all transactions for this user, newest first
         const transactions = await Transaction.find({ user: userId })
             .populate('category')
             .sort({ date: -1 });
 
-        // Calculate Bank Total for Navbar
         const allStats = await Transaction.aggregate([
             { $match: { user: userId } },
-            { $group: { _id: null, total: { $sum: { $cond: [{ $eq: ["$type", "CREDIT"] }, "$amount", { $multiply: ["$amount", -1] }] } } } }
+            { $group: { 
+                _id: null, 
+                total: { $sum: { $cond: [{ $eq: ["$type", "CREDIT"] }, "$amount", { $multiply: ["$amount", -1] }] } } 
+            }}
         ]);
+        
         const grandTotal = allStats.length > 0 ? allStats[0].total : 0;
 
-        res.render('reports', { transactions, grandTotal });
+        res.render('reports', { 
+            transactions, 
+            grandTotal // This is what the EJS will now use
+        });
     } catch (err) {
         res.status(500).send("Report Page Error");
     }
 });
+// Example of how your updated route should look
+router.get('/transactions/:categoryId', isLoggedIn, async (req, res) => {
+    try {
+        const categoryId = req.params.categoryId;
+        
+        // 1. Fetch the specific category the user is viewing
+        const currentCategory = await Category.findById(categoryId);
+        
+        // 2. Fetch the transactions for this category
+        const transactions = await Transaction.find({ category: categoryId }).sort({ date: -1 });
 
+        // 3. FETCH ALL CATEGORIES (This is the missing part causing the error)
+        const categories = await Category.find({ user: req.user.id });
+
+        // 4. Send EVERYTHING to the EJS template
+        res.render('transactions', { 
+            category: currentCategory, 
+            transactions: transactions, 
+            categories: categories, // MUST include this
+            user: req.user 
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.redirect('/dashboard');
+    }
+});
 // 2. Generate and Download PDF
 router.post('/reports/download', isLoggedIn, async (req, res) => {
     try {
