@@ -3,80 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zumclo</title>
-    <%- include('partials/navbar') %>
+    <title>Smart Khata | Unified Tracker</title>
     <style>
-        :root { --cream: #F5F5DC; --navy: #001F3F; --gold: #D4AF37; --white: #ffffff; }
-        body { background-color: var(--cream); font-family: 'Inter', sans-serif; padding-top: 100px; margin: 0; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-
-        /* Welcome Section */
-        .welcome-header { margin-bottom: 40px; }
-        .welcome-header h1 { font-family: 'MuseoModerno'; font-size: 2.5rem; color: var(--navy); margin: 0; }
-        .date-chip { background: var(--navy); color: var(--cream); padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; }
-
-        /* Dashboard Grid */
-        .dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
-        
-        .main-card { background: var(--navy); border-radius: 30px; padding: 40px; color: var(--cream); position: relative; overflow: hidden; }
-        .main-card::after { content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%; }
-
-        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .action-tile { background: var(--white); padding: 25px; border-radius: 24px; text-decoration: none; color: var(--navy); transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.03); border: 1px solid transparent; }
-        .action-tile:hover { transform: translateY(-5px); border-color: var(--navy); }
-        .action-tile i { margin-bottom: 15px; display: block; color: var(--navy); }
-
-        /* Responsive */
-        @media (max-width: 900px) {
-            .dash-grid { grid-template-columns: 1fr; }
-            .welcome-header h1 { font-size: 1.8rem; }
+        /* CSS Section */
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
         }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container { width: 100%; max-width: 500px; }
+
+        .header { text-align: center; margin-bottom: 20px; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .stat-card h3 { font-size: 0.8rem; color: #64748b; margin: 0; }
+        .stat-card p { font-size: 1.2rem; font-weight: bold; margin: 8px 0 0; }
+
+        .form-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 5px; color: #475569; }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:active { opacity: 0.8; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h2>Smart Khata</h2>
+        </div>
 
-<div class="container">
-    <div class="welcome-header">
-        <span class="date-chip"><%= new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) %></span>
-        <h1>Welcome back, Partner</h1>
-    </div>
-
-    <div class="dash-grid">
-        <div class="main-card">
-            <h3 style="font-weight: 300; opacity: 0.8; margin: 0;">Business Liquidity</h3>
-            <h2 style="font-size: 3.5rem; margin: 10px 0;">PKR <%= (totalCapital - totalSpent).toLocaleString() %></h2>
-            <div style="display: flex; gap: 30px; margin-top: 20px;">
-                <div>
-                    <small style="opacity: 0.6; display: block;">Total Capital</small>
-                    <strong>PKR <%= totalCapital.toLocaleString() %></strong>
-                </div>
-                <div>
-                    <small style="opacity: 0.6; display: block;">Total Expenses</small>
-                    <strong>PKR <%= totalSpent.toLocaleString() %></strong>
-                </div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Balance</h3>
+                <p id="total-pk">0 PKR</p>
+            </div>
+            <div class="stat-card">
+                <h3>Study Fund</h3>
+                <p id="study-eu">€ 0</p>
             </div>
         </div>
 
-        <div class="quick-actions">
-            <a href="/expense" class="action-tile">
-                <i data-lucide="receipt-pkr" style="width: 32px; height: 32px;"></i>
-                <strong>Add Expense</strong>
-                <p style="font-size: 0.75rem; color: #888; margin: 5px 0 0;">Log a new business cost</p>
-            </a>
-            <a href="/funds" class="action-tile">
-                <i data-lucide="arrow-left-right" style="width: 32px; height: 32px;"></i>
-                <strong>Transfer</strong>
-                <p style="font-size: 0.75rem; color: #888; margin: 5px 0 0;">Partner to partner funds</p>
-            </a>
-            <a href="/history" class="action-tile" style="grid-column: span 2;">
-                <i data-lucide="bar-chart-3" style="width: 32px; height: 32px;"></i>
-                <strong>Audit Logs</strong>
-                <p style="font-size: 0.75rem; color: #888; margin: 5px 0 0;">View full transaction history for the month</p>
-            </a>
+        <div class="form-card">
+            <form id="txForm">
+                <div class="input-group">
+                    <label>Amount</label>
+                    <input type="number" id="amount" placeholder="0.00" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Transaction Type</label>
+                    <select id="type">
+                        <option value="EXPENSE">Expense (Kharcha)</option>
+                        <option value="INCOME">Income (Aamad)</option>
+                        <option value="LOAN_GIVEN">Loan Given (Udhaar)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Paid From / To</label>
+                    <select id="source">
+                        <option value="Cash">Cash</option>
+                        <option value="Bank">Bank Account</option>
+                        <option value="Business Fund">Business Fund</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Category</label>
+                    <select id="category">
+                        <option value="Study Abroad">Study Abroad (Italy)</option>
+                        <option value="Business">Knitwear Business</option>
+                        <option value="Personal">Personal</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Description / Person Name</label>
+                    <input type="text" id="desc" placeholder="e.g. Ali or Visa Fee">
+                </div>
+
+                <button type="submit">Save Transaction</button>
+            </form>
         </div>
     </div>
-</div>
 
-<script>lucide.createIcons();</script>
+    <script>
+        // JS Section
+        document.getElementById('txForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const payload = {
+                amount: document.getElementById('amount').value,
+                type: document.getElementById('type').value,
+                sourceAccount: document.getElementById('source').value,
+                category: document.getElementById('category').value,
+                description: document.getElementById('desc').value
+            };
+
+            try {
+                const res = await fetch('/api/transactions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert('Transaction Logged Successfully');
+                    e.target.reset();
+                }
+            } catch (err) {
+                console.error('Submission failed', err);
+            }
+        });
+    </script>
 </body>
 </html>

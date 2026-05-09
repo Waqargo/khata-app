@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Reports | Smart Khata</title>
+    <style>
+        :root {
+            --brand: #093C5D;
+            --bg: #F4F7F9;
+            --white: #ffffff;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            color: var(--text-main); 
+        }
+
+        .report-container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+
+        /* Header Section */
+        .report-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 35px; 
+        }
+        
+        .report-header h1 { 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            color: var(--brand); 
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-download { 
+            background: var(--brand); 
+            color: white; 
+            border: none; 
+            padding: 14px 28px; 
+            border-radius: 14px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(9, 60, 93, 0.15);
+        }
+        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(9, 60, 93, 0.2); }
+
+        /* Table Design */
+        .table-wrapper {
+            background: var(--white);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        
+        th { 
+            background: #FAFBFC; 
+            padding: 20px; 
+            text-align: left; 
+            font-size: 0.7rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1.2px; 
+            color: var(--text-muted);
+            border-bottom: 1px solid #f0f0f0;
+            font-weight: 800;
+        }
+
+        td { 
+            padding: 18px 20px; 
+            border-bottom: 1px solid #f9f9f9; 
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fcfcfc; }
+
+        .date-cell { font-weight: 600; color: var(--brand); font-variant-numeric: tabular-nums; }
+        
+        /* Type Badges */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            display: inline-block;
+        }
+        .badge-debit { background: #fff1f0; color: var(--danger); }
+        .badge-credit { background: #f6ffed; color: var(--success); }
+
+        .amount-cell { font-weight: 800; font-size: 1rem; }
+
+        /* Modal Customization */
+        .modal { 
+            display: none; position: fixed; z-index: 2000; inset: 0; 
+            background: rgba(9, 60, 93, 0.4); backdrop-filter: blur(8px);
+            align-items: center; justify-content: center; 
+        }
+        .modal-content { 
+            background: white; padding: 40px; border-radius: 28px; width: 100%; max-width: 400px; 
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2); 
+        }
+        .modal-content h3 { margin-top: 0; color: var(--brand); font-weight: 800; }
+        
+        .form-label { display: block; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); margin-top: 20px; text-transform: uppercase; }
+        .modal-input { 
+            width: 100%; padding: 14px; margin-top: 8px; border: 2px solid #f0f0f0; 
+            border-radius: 12px; font-family: inherit; font-weight: 600; box-sizing: border-box;
+        }
+        .modal-input:focus { outline: none; border-color: var(--brand); }
+
+        .btn-group { display: flex; gap: 15px; margin-top: 30px; }
+        .btn-cancel { flex: 1; padding: 14px; border: none; background: #f5f5f5; border-radius: 12px; font-weight: 700; cursor: pointer; color: var(--text-muted); }
+        .btn-submit { flex: 2; padding: 14px; border: none; background: var(--brand); color: white; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .report-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            th:nth-child(3), td:nth-child(3) { display: none; } /* Hide description on mobile */
+        }
+    </style>
+</head>
+<body>
+
+<%- include('partials/navbar') %>
+
+<div class="report-container">
+    <div class="report-header">
+        <div>
+            <h1>Global Ledger</h1>
+            <p style="color: var(--text-muted); margin-top: 5px; font-weight: 500;">Reviewing all historic transactions</p>
+        </div>
+        <button class="btn-download" onclick="document.getElementById('downloadModal').style.display='flex'">
+            <i data-lucide="file-text" style="width: 20px;"></i>
+            Export Statement
+        </button>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% transactions.forEach(t => { %>
+                <tr>
+                    <td class="date-cell"><%= t.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
+                    <td style="font-weight: 600; color: var(--brand);">
+                        <%= t.category ? t.category.icon + ' ' + t.category.name : '—' %>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.9rem;"><%= t.description || 'No description' %></td>
+                    <td>
+                        <span class="badge <%= t.type === 'DEBIT' ? 'badge-debit' : 'badge-credit' %>">
+                            <%= t.type %>
+                        </span>
+                    </td>
+                    <td class="amount-cell" style="text-align: right; color: <%= t.type === 'DEBIT' ? 'var(--danger)' : 'var(--success)' %>">
+                        <%= t.type === 'DEBIT' ? '-' : '+' %> Rs. <%= t.amount.toLocaleString() %>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Download Modal -->
+<div id="downloadModal" class="modal">
+    <div class="modal-content">
+        <h3>Generate PDF</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Select the date range for your financial statement.</p>
+        
+        <form action="/reports/download" method="POST">
+            <label class="form-label">From Date</label>
+            <input type="date" name="startDate" class="modal-input" required>
+            
+            <label class="form-label">To Date</label>
+            <input type="date" name="endDate" class="modal-input" required>
+            
+            <div class="btn-group">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('downloadModal').style.display='none'">Close</button>
+                <button type="submit" class="btn-submit">Download PDF</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+    
+    // Close modal on outside click
+    window.onclick = function(event) {
+        let modal = document.getElementById('downloadModal');
+        if (event.target == modal) modal.style.display = 'none';
+    }
+</script>
+
+</body>
+</html>

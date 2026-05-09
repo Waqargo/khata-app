@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Category | Smart Khata</title>
+    <style>
+        :root { 
+            --brand: #093C5D; 
+            --bg-light: #F5F5F5; 
+            --white: #ffffff; 
+            --border: #e0e0e0;
+            --text: #2d3436;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-light); 
+            margin: 0; 
+            color: var(--text);
+        }
+
+        .form-container { 
+            max-width: 480px; 
+            margin: 60px auto; 
+            background: var(--white); 
+            padding: 40px; 
+            border-radius: 30px; 
+            box-shadow: 0 15px 35px rgba(9, 60, 93, 0.05); 
+        }
+
+        .form-header { text-align: center; margin-bottom: 30px; }
+        .form-header h2 { font-weight: 800; color: var(--brand); margin: 0; font-size: 1.8rem; }
+        .form-header p { color: #888; font-size: 0.9rem; margin-top: 5px; }
+
+        .form-group { margin-bottom: 24px; }
+        label { display: block; margin-bottom: 10px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--brand); }
+        
+        input[type="text"], select { 
+            width: 100%; 
+            padding: 14px 18px; 
+            border: 2px solid var(--bg-light); 
+            border-radius: 15px; 
+            box-sizing: border-box; 
+            font-size: 1rem; 
+            background: var(--bg-light);
+            transition: all 0.3s ease;
+            outline: none;
+            font-weight: 500;
+        }
+
+        input:focus, select:focus { border-color: var(--brand); background: white; }
+
+        /* Modern Icon Grid */
+        .icon-grid { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 12px; 
+            margin-top: 10px; 
+        }
+        .icon-option { 
+            background: var(--bg-light);
+            border: 2px solid transparent;
+            border-radius: 12px; 
+            padding: 12px; 
+            text-align: center; 
+            cursor: pointer; 
+            font-size: 1.4rem; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .icon-option:hover { transform: translateY(-3px); background: #eee; }
+        .icon-option.selected { 
+            background: var(--brand); 
+            color: white; 
+            border-color: var(--brand); 
+            box-shadow: 0 8px 15px rgba(9, 60, 93, 0.2);
+        }
+
+        .btn-save { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--brand); 
+            color: white; 
+            border: none; 
+            border-radius: 15px; 
+            font-weight: 800; 
+            font-size: 1rem;
+            cursor: pointer; 
+            margin-top: 10px; 
+            transition: all 0.3s;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(9, 60, 93, 0.2); }
+
+        .back-link { 
+            display: block; 
+            text-align: center; 
+            margin-top: 20px; 
+            color: #999; 
+            text-decoration: none; 
+            font-weight: 600; 
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .back-link:hover { color: var(--brand); }
+
+        small { font-weight: 500; display: block; margin-top: 6px; font-size: 0.75rem; color: #a0a0a0; }
+    </style>
+</head>
+<body>
+
+<%- include('partials/navbar') %>
+
+<div class="form-container">
+    <div class="form-header">
+        <h2>New Category</h2>
+        <p>Organize your transactions with style</p>
+    </div>
+
+    <form action="/add-category" method="POST">
+        
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" name="name" placeholder="Business, Savings, Shopping..." required>
+        </div>
+
+        <div class="form-group">
+            <label>Grouping</label>
+            <select name="parentId">
+                <option value="none">Main Category (Parent)</option>
+                <% parentCategories.forEach(parent => { %>
+                    <option value="<%= parent._id %>"><%= parent.icon %> <%= parent.name %></option>
+                <% }) %>
+            </select>
+            <small>If this is a sub-folder, select its parent here.</small>
+        </div>
+
+        <div class="form-group">
+            <label>Identity Icon</label>
+            <div class="icon-grid">
+                <div class="icon-option" data-icon="💰">💰</div>
+                <div class="icon-option" data-icon="🏦">🏦</div>
+                <div class="icon-option" data-icon="🍕">🍕</div>
+                <div class="icon-option" data-icon="⛽">⛽</div>
+                <div class="icon-option" data-icon="📱">📱</div>
+                <div class="icon-option" data-icon="👕">👕</div>
+                <div class="icon-option" data-icon="🛠️">🛠️</div>
+                <div class="icon-option" data-icon="✈️">✈️</div>
+                <div class="icon-option" data-icon="🛒">🛒</div>
+                <div class="icon-option" data-icon="💡">💡</div>
+            </div>
+            <input type="hidden" name="icon" id="selectedIcon" value="📂">
+        </div>
+
+        <button type="submit" class="btn-save">Secure & Save Category</button>
+        <a href="/dashboard" class="back-link">Discard Changes</a>
+    </form>
+</div>
+
+<script>
+    const iconOptions = document.querySelectorAll('.icon-option');
+    const hiddenInput = document.getElementById('selectedIcon');
+
+    iconOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            iconOptions.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            hiddenInput.value = option.getAttribute('data-icon');
+        });
+    });
+
+    // Handle Form submission with Loader (Defined in your Navbar)
+    document.querySelector('form').addEventListener('submit', () => {
+        document.getElementById('page-loader').style.width = '100%';
+    });
+</script>
+
+</body>
+</html>

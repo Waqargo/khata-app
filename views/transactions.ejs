@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= category.name %> History | Smart Khata</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #093C5D;
+            --bg: #F8F9FA;
+            --white: #ffffff;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --border: #edf2f7;
+            --text-main: #1a202c;
+            --text-muted: #718096;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .container { max-width: 850px; margin: 30px auto; padding: 0 20px; }
+
+        /* Unified Header Area */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .category-meta h1 { 
+            margin: 0; 
+            font-size: 2rem; 
+            font-weight: 800; 
+            color: var(--brand); 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        
+        .balance-badge {
+            background: var(--white);
+            padding: 15px 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            text-align: right;
+        }
+        .balance-badge .label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+        .balance-badge .value { font-size: 1.5rem; font-weight: 800; margin-top: 2px; }
+
+        /* Modern Filter Bar */
+        .filter-section {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            border: 1px solid var(--border);
+        }
+        .filter-form { display: flex; gap: 15px; align-items: center; }
+        .input-group { flex: 1; }
+        .input-group label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--brand); margin-bottom: 5px; text-transform: uppercase; }
+        .filter-input { 
+            width: 100%; padding: 12px; border: 2px solid var(--bg); border-radius: 12px; 
+            font-family: inherit; font-size: 0.9rem; font-weight: 600; outline: none; transition: 0.3s;
+        }
+        .filter-input:focus { border-color: var(--brand); }
+        
+        .btn-apply { background: var(--brand); color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+        .btn-apply:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Timeline Ledger */
+        .timeline-date {
+            padding: 30px 0 15px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--brand);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .timeline-date::after { content: ""; flex: 1; height: 2px; background: var(--border); }
+
+        .t-row {
+            background: var(--white);
+            padding: 20px 25px;
+            border-radius: 18px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid transparent;
+            transition: 0.3s;
+        }
+        .t-row:hover { border-color: var(--brand); box-shadow: 0 10px 20px rgba(9, 60, 93, 0.05); transform: scale(1.01); }
+
+        .t-info .title { font-weight: 700; font-size: 1.05rem; display: block; color: var(--text-main); }
+        .t-info .sub { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+
+        .t-amount { font-weight: 800; font-size: 1.15rem; text-align: right; min-width: 120px; }
+        .debit { color: var(--danger); }
+        .credit { color: var(--success); }
+
+        .t-actions { display: flex; gap: 8px; }
+        .action-icon { 
+            padding: 10px; border-radius: 10px; background: var(--bg); color: var(--brand); 
+            border: none; cursor: pointer; transition: 0.2s; display: flex; align-items: center; 
+        }
+        .action-icon:hover { background: var(--brand); color: white; }
+        .action-icon.delete:hover { background: var(--danger); }
+
+        /* Modal Customization */
+        .modal {
+            display: none; position: fixed; z-index: 1000; inset: 0;
+            background: rgba(9, 60, 93, 0.4); align-items: center; justify-content: center; backdrop-filter: blur(8px);
+        }
+        .modal-card { background: white; padding: 40px; border-radius: 28px; width: 100%; max-width: 450px; box-shadow: 0 30px 60px rgba(0,0,0,0.2); }
+        .form-control { margin-bottom: 20px; }
+        .form-control label { display: block; font-size: 0.75rem; font-weight: 800; color: var(--brand); margin-bottom: 8px; text-transform: uppercase; }
+        .modal-input { width: 100%; padding: 15px; border: 2px solid var(--bg); border-radius: 14px; font-size: 1rem; box-sizing: border-box; }
+
+        @media (max-width: 768px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .filter-form { flex-direction: column; }
+            .t-row { grid-template-columns: 1fr auto; }
+            .t-actions { grid-column: span 2; justify-content: flex-end; padding-top: 10px; border-top: 1px solid var(--border); }
+        }
+    </style>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<%- include('partials/navbar') %>
+
+<% 
+function getRelativeDate(date) {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const targetDate = new Date(date);
+    if (targetDate.toDateString() === today.toDateString()) return "Today";
+    if (targetDate.toDateString() === yesterday.toDateString()) return "Yesterday";
+    return targetDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+%>
+
+<div class="container">
+    <div class="page-header">
+        <div class="category-meta">
+            <h1><span><%= category.icon %></span> <%= category.name %></h1>
+        </div>
+        <div class="balance-badge">
+            <div class="label">Running Total</div>
+            <div class="value <%= categoryTotal < 0 ? 'debit' : 'credit' %>">
+                Rs. <%= categoryTotal.toLocaleString() %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <form action="/transactions/<%= category._id %>" method="GET" class="filter-form">
+            <div class="input-group">
+                <label>From</label>
+                <input type="date" name="startDate" class="filter-input" value="<%= filters.startDate %>">
+            </div>
+            <div class="input-group">
+                <label>Until</label>
+                <input type="date" name="endDate" class="filter-input" value="<%= filters.endDate %>">
+            </div>
+            <button type="submit" class="btn-apply">Filter View</button>
+            <a href="/transactions/<%= category._id %>" style="text-decoration: none; color: var(--text-muted); font-weight: 700; font-size: 0.9rem;">Reset</a>
+        </form>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline">
+        <% if (transactions && transactions.length > 0) { %>
+            <% let lastDate = ""; %>
+            <% transactions.forEach(t => { %>
+                <% const currentDate = new Date(t.date).toDateString(); %>
+
+                <% if (currentDate !== lastDate) { %>
+                    <div class="timeline-date"><%= getRelativeDate(t.date) %></div>
+                    <% lastDate = currentDate; %>
+                <% } %>
+
+                <div class="t-row">
+                    <div class="t-info">
+                        <span class="title"><%= t.description || 'General Entry' %></span>
+                        <span class="sub"><%= t.type === 'DEBIT' ? 'Expense' : 'Income' %> • <%= t.sourceAccount || 'Personal Wallet' %></span>
+                    </div>
+                    <div class="t-amount <%= t.type === 'DEBIT' ? 'debit' : 'credit' %>">
+                        <%= t.type === 'DEBIT' ? '-' : '+' %> <%= t.amount.toLocaleString() %>
+                    </div>
+                    <div class="t-actions">
+                        <button class="action-icon" onclick="openEditModal('<%= JSON.stringify(t) %>')">
+                            <i data-lucide="edit-3" style="width: 16px;"></i>
+                        </button>
+                        <form action="/transactions/delete/<%= t._id %>" method="POST" onsubmit="return confirm('Remove this record permanentely?')">
+                            <button type="submit" class="action-icon delete">
+                                <i data-lucide="trash-2" style="width: 16px;"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div style="text-align: center; padding: 60px; background: white; border-radius: 30px;">
+                <p style="color: var(--text-muted); font-weight: 600;">No history found for these dates.</p>
+                <a href="/add-transaction" class="btn-apply" style="display: inline-block; text-decoration: none; margin-top: 10px;">Add New Entry</a>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-card">
+        <h2 style="color: var(--brand); margin-bottom: 30px;">Edit Transaction</h2>
+        <form id="editForm" method="POST">
+            <div class="form-control">
+                <label>Flow Type</label>
+                <select name="type" id="editType" class="modal-input">
+                    <option value="DEBIT">Debit (Out)</option>
+                    <option value="CREDIT">Credit (In)</option>
+                </select>
+            </div>
+            <div class="form-control">
+                <label>Amount (PKR)</label>
+                <input type="number" name="amount" id="editAmount" class="modal-input" required>
+            </div>
+            <div class="form-control">
+                <label>Transaction Date</label>
+                <input type="date" name="date" id="editDate" class="modal-input" required>
+            </div>
+            <div class="form-control">
+                <label>Note / Description</label>
+                <textarea name="description" id="editDesc" class="modal-input" rows="3"></textarea>
+            </div>
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn-apply" style="flex: 2;">Save Updates</button>
+                <button type="button" onclick="closeModal()" class="btn-apply" style="flex: 1; background: var(--bg); color: var(--text-muted);">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    function openEditModal(dataStr) {
+        const t = JSON.parse(dataStr);
+        const modal = document.getElementById('editModal');
+        const form = document.getElementById('editForm');
+        
+        form.action = `/transactions/edit/${t._id}`;
+        document.getElementById('editType').value = t.type;
+        document.getElementById('editAmount').value = t.amount;
+        document.getElementById('editDesc').value = t.description;
+        document.getElementById('editDate').value = new Date(t.date).toISOString().split('T')[0];
+
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+    window.onclick = (e) => { if (e.target == document.getElementById('editModal')) closeModal(); }
+</script>
+
+</body>
+</html>

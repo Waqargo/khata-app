@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Smart Khata</title>
+    <style>
+        body { 
+            background-color: var(--bg-light); 
+            margin: 0; 
+            font-family: 'Inter', sans-serif;
+            color: #2d3436;
+        }
+.btn-action-group { 
+    display: flex; 
+    gap: 12px; 
+    position: relative; /* Add this */
+    z-index: 10;        /* Add this */
+}
+        .dashboard-container { max-width: 1100px; margin: 40px auto; padding: 0 25px; }
+
+        /* Sleek Hero Section */
+        .hero-section {
+            background: var(--brand);
+            border-radius: 30px;
+            padding: 50px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section::after {
+            content: ''; position: absolute; top: -50%; right: -10%; 
+            width: 300px; height: 300px; background: rgba(255,255,255,0.03); 
+            border-radius: 50%;
+        }
+
+        .hero-content h2 { margin: 0; opacity: 0.7; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; }
+        .hero-content .main-balance { font-size: 3.5rem; font-weight: 800; margin-top: 10px; }
+
+        .btn-action-group { display: flex; gap: 12px; }
+        .btn-glass {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            color: white; padding: 14px 28px;
+            border-radius: 16px; text-decoration: none;
+            font-weight: 700; font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.3s;
+        }
+        .btn-glass:hover { background: white; color: var(--brand); transform: translateY(-3px); }
+
+        /* Grid Design */
+        .section-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 25px; 
+        }
+        .section-header h3 { font-weight: 800; font-size: 1.4rem; color: var(--brand); }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .modern-card {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 30px;
+            text-decoration: none; color: inherit;
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .modern-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 20px 40px rgba(9, 60, 93, 0.08);
+            border-color: var(--brand);
+        }
+
+        .card-top { display: flex; align-items: center; gap: 18px; margin-bottom: 25px; }
+        .icon-circle {
+            width: 60px; height: 60px; background: var(--bg-light);
+            border-radius: 20px; display: flex; align-items: center; 
+            justify-content: center; font-size: 1.8rem;
+        }
+        .cat-title { font-weight: 800; font-size: 1.2rem; color: var(--brand); }
+
+        .card-stats { margin-top: auto; }
+        .stats-label { font-size: 0.7rem; text-transform: uppercase; color: #999; font-weight: 700; }
+        .stats-val { font-size: 1.6rem; font-weight: 800; margin-top: 4px; }
+
+        .count-badge {
+            margin-top: 15px; padding: 6px 12px; background: #ebf3f8;
+            color: var(--brand); border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section { flex-direction: column; text-align: center; gap: 30px; padding: 40px 20px; }
+            .hero-content .main-balance { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<%- include('partials/navbar') %>
+
+<div class="dashboard-container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h2>Total Net Worth</h2>
+            <div class="main-balance">Rs. <%= grandTotal.toLocaleString() %></div>
+        </div>
+        <div class="btn-action-group">
+            <a href="/add-category" class="btn-glass">+ Category</a>
+            <a href="/add-transaction" class="btn-glass" style="background: white; color: var(--brand);">+ Transaction</a>
+        </div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="section-header">
+        <h3>Accounts & Categories</h3>
+    </div>
+
+    <div class="category-grid">
+        <% 
+            const parents = categories.filter(c => !c.parent); 
+        %>
+
+        <% if (parents.length > 0) { %>
+            <% parents.forEach(cat => { %>
+                <% 
+                    const balance = categoryBalances[cat._id.toString()] || 0; 
+                    const childCount = categories.filter(c => c.parent && c.parent.toString() === cat._id.toString()).length;
+                %>
+                <a href="/category/<%= cat._id %>" class="modern-card">
+                    <div class="card-top">
+                        <div class="icon-circle"><%= cat.icon || '💼' %></div>
+                        <div class="cat-title"><%= cat.name %></div>
+                    </div>
+                    
+                    <div class="card-stats">
+                        <div class="stats-label">Current Balance</div>
+                        <div class="stats-val" style="color: <%= balance < 0 ? 'var(--danger)' : 'var(--brand)' %>">
+                            Rs. <%= Math.abs(balance).toLocaleString() %>
+                        </div>
+                    </div>
+
+                    <% if (childCount > 0) { %>
+                        <div style="display: flex;">
+                            <span class="count-badge">
+                                <i data-lucide="layers" style="width:12px; vertical-align: middle;"></i> 
+                                <%= childCount %> Nested Folders
+                            </span>
+                        </div>
+                    <% } %>
+                </a>
+            <% }) %>
+        <% } else { %>
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px; background: white; border-radius: 30px;">
+                <i data-lucide="plus-circle" style="width: 48px; height: 48px; color: #ddd; margin-bottom: 15px;"></i>
+                <p style="color: #888; font-weight: 500;">No categories found. Start by adding one.</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+
+</body>
+</html>

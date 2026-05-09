@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Transaction | Smart Khata</title>
+    <style>
+        :root { 
+            --brand: #093C5D; 
+            --bg-light: #F5F5F5; 
+            --white: #ffffff; 
+            --danger: #ff4757;
+            --success: #2ed573;
+            --text: #2d3436;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-light); 
+            margin: 0; 
+            color: var(--text);
+        }
+
+        .form-container { 
+            max-width: 500px; 
+            margin: 50px auto; 
+            background: var(--white); 
+            padding: 40px; 
+            border-radius: 30px; 
+            box-shadow: 0 20px 40px rgba(9, 60, 93, 0.05); 
+        }
+
+        .form-header { text-align: center; margin-bottom: 35px; }
+        .form-header h2 { font-weight: 800; color: var(--brand); margin: 0; font-size: 1.8rem; }
+        .form-header p { color: #888; font-size: 0.9rem; margin-top: 5px; }
+
+        .form-group { margin-bottom: 22px; }
+        label { 
+            display: block; 
+            margin-bottom: 10px; 
+            font-weight: 700; 
+            font-size: 0.8rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.8px; 
+            color: var(--brand); 
+            opacity: 0.8;
+        }
+
+        input, select, textarea { 
+            width: 100%; 
+            padding: 15px 18px; 
+            border: 2px solid var(--bg-light); 
+            border-radius: 16px; 
+            box-sizing: border-box; 
+            font-size: 1rem; 
+            background: var(--bg-light);
+            transition: all 0.3s ease;
+            outline: none;
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        input:focus, select:focus, textarea:focus { 
+            border-color: var(--brand); 
+            background: white; 
+            box-shadow: 0 5px 15px rgba(9, 60, 93, 0.05);
+        }
+
+        /* Specialized Styling for Transaction Type */
+        .type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: var(--bg-light);
+            padding: 5px;
+            border-radius: 18px;
+            margin-bottom: 25px;
+        }
+        .type-option {
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            color: #777;
+        }
+        .type-option.active.debit { background: var(--danger); color: white; }
+        .type-option.active.credit { background: var(--success); color: white; }
+
+        .btn-submit { 
+            width: 100%; 
+            padding: 18px; 
+            background: var(--brand); 
+            color: white; 
+            border: none; 
+            border-radius: 16px; 
+            font-weight: 800; 
+            font-size: 1rem;
+            cursor: pointer; 
+            margin-top: 15px; 
+            transition: all 0.3s;
+        }
+        .btn-submit:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 12px 24px rgba(9, 60, 93, 0.2); 
+            filter: brightness(1.1);
+        }
+
+        .back-link { 
+            display: block; 
+            text-align: center; 
+            margin-top: 25px; 
+            color: #999; 
+            text-decoration: none; 
+            font-weight: 600; 
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .back-link:hover { color: var(--brand); }
+
+        /* Customizing the select options */
+        option { font-weight: 500; padding: 10px; }
+        .parent-label { background: #eee; font-weight: 800; color: var(--brand); }
+    </style>
+</head>
+<body>
+
+<%- include('partials/navbar') %>
+
+<div class="form-container">
+    <div class="form-header">
+        <h2>New Transaction</h2>
+        <p>Keep your ledger accurate and updated</p>
+    </div>
+
+    <form action="/add-transaction" method="POST" id="transactionForm">
+        
+        <!-- Modern Type Switcher -->
+        <label>Flow Type</label>
+        <div class="type-selector">
+            <div class="type-option debit active" onclick="setType('DEBIT', this)">Expense</div>
+            <div class="type-option credit" onclick="setType('CREDIT', this)">Income</div>
+        </div>
+        <input type="hidden" name="type" id="transactionType" value="DEBIT">
+
+        <div class="form-group">
+            <label>Date of Entry</label>
+            <input type="date" name="date" id="transactionDate" required>
+        </div>
+
+        <div class="form-group">
+            <label>Amount (Rs.)</label>
+            <input type="number" name="amount" step="0.01" placeholder="0.00" required>
+        </div>
+
+        <div class="form-group">
+            <label>Category Allocation</label>
+            <select name="categoryId" required>
+                <option value="" disabled selected>Select destination</option>
+                <% parents.forEach(parent => { %>
+                    <option value="<%= parent._id %>" class="parent-label">
+                        <%= parent.icon %> <%= parent.name %> (Main)
+                    </option>
+                    <% 
+                        const subs = children.filter(c => c.parent.toString() === parent._id.toString());
+                        subs.forEach(child => { 
+                    %>
+                        <option value="<%= child._id %>">
+                            &nbsp;&nbsp;&nbsp; ↳ <%= child.icon %> <%= child.name %>
+                        </option>
+                    <% }) %>
+                <% }) %>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Memo / Notes</label>
+            <textarea name="description" rows="2" placeholder="What was this for?"></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+            <i data-lucide="check-circle-2" style="width: 18px; vertical-align: middle; margin-right: 8px;"></i>
+            Confirm Transaction
+        </button>
+        
+        <a href="/dashboard" class="back-link">Return to Dashboard</a>
+    </form>
+</div>
+
+<script>
+    lucide.createIcons();
+    
+    // Set default date to today
+    document.getElementById('transactionDate').valueAsDate = new Date();
+
+    // Custom Switcher Logic
+    function setType(val, element) {
+        document.getElementById('transactionType').value = val;
+        document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    // Trigger Navbar Loader on Submit
+    document.getElementById('transactionForm').addEventListener('submit', () => {
+        document.getElementById('page-loader').style.width = '100%';
+    });
+</script>
+
+</body>
+</html>

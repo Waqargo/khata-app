@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
 
 // Handle Login
 router.post('/login', passport.authenticate('local', {
-    successRedirect: '/',
+    successRedirect: '/dashboard',
     failureRedirect: '/auth'
 }));
 
